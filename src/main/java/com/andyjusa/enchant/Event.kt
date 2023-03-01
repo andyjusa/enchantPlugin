@@ -14,16 +14,17 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import kotlin.math.max
 import kotlin.random.Random
 
-class Event:Listener {
+class Event : Listener {
     private val enchantUIName = "강화창"
+
     @EventHandler
-    fun onInventoryClose(event: InventoryCloseEvent)
-    {
+    fun onInventoryClose(event: InventoryCloseEvent) {
         if (event.view.title == enchantUIName) {
             event.player.inventory.addItem(event.inventory.getItem(6))
             event.player.inventory.addItem(event.inventory.getItem(7))
         }
     }
+
     @EventHandler
     fun onInventoryClick(event: InventoryClickEvent) {
         val inventoryView = event.view
@@ -32,7 +33,7 @@ class Event:Listener {
         val player = event.whoClicked as Player
         if (inventoryName == enchantUIName) {
             event.isCancelled = true
-            when(clickedItem?.type) {
+            when (clickedItem?.type) {
 
                 Material.BOOK -> {
 
@@ -79,15 +80,15 @@ class Event:Listener {
                             enchantmentsList.add(enchantment.key)
                         }
                         for (i in 0 until 5) {
-                            val item:ItemStack
-                            if(i<enchantmentsList.size) {
+                            val item: ItemStack
+                            if (i < enchantmentsList.size) {
                                 item = ItemStack(Material.ENCHANTED_BOOK)
                                 item.addUnsafeEnchantment(
                                     enchantmentsList[i],
                                     clickedItem.getEnchantmentLevel(enchantmentsList[i])
                                 )
 
-                            }else{
+                            } else {
                                 item = ItemStack(Material.BOOK)
                             }
                             player.openInventory.setItem(i, item)
@@ -100,6 +101,8 @@ class Event:Listener {
                         val needEnchant = arrayListOf<Enchantment>()
                         var count = 0
                         var noMoney = false
+                        var disenchantList = arrayListOf<Enchantment>()
+
                         enchantList.remove(Enchantment.BINDING_CURSE)
                         enchantList.remove(Enchantment.VANISHING_CURSE)
                         for (i in 0 until item.enchantments.size) {
@@ -111,10 +114,12 @@ class Event:Listener {
                             if (player.openInventory.getItem(i)?.type == Material.BARRIER) {
                                 needEnchant.add(enchant)
                             } else {
-                                item.removeEnchantment(enchant)
+//                                item.removeEnchantment(enchant)
+                                disenchantList.add(enchant)
                                 count++
                             }
                         }
+
                         player.openInventory.getItem(7).let {
                             if (it?.type == Material.DIAMOND && it.amount >= needEnchant.size) {
                                 player.sendMessage("ass")
@@ -137,41 +142,34 @@ class Event:Listener {
                                 })
                             } else {
                                 noMoney = true
-
                             }
                         }
-                        needEnchant.forEach { enchantList.remove(it) }
+
+                        if (noMoney) {
+                            player.sendMessage("자원이 딸림")
+                        } else {
+                            disenchantList.forEach { item.removeEnchantment(it) }
+                            needEnchant.forEach { enchantList.remove(it) }
 
 
 
-                        for (i in 1..count) {
-                            val enchant = enchantList.random()
-                            enchantList.remove(enchant)
-                            val level = Random.nextInt(1, enchant.maxLevel + 1)
-                            item.addUnsafeEnchantment(enchant, level)
-                        }
-                        if (item.enchantments.isEmpty() || (item.enchantments.size < 5 && Random.nextInt(
-                                0,
-                                50
-                            ) == 35)
-                        ) {
-                            val enchant = enchantList.random()
-                            enchantList.remove(enchant)
-                            val level = Random.nextInt(1, enchant.maxLevel + 1)
-                            item.addUnsafeEnchantment(enchant, level)
-                        }
-                        if (!noMoney) {
-                            player.openInventory?.setItem(6, item)
-                        } else{
-                            item.enchantments.forEach {
-                                item.removeEnchantment(it.key)
+                            for (i in 1..count) {
+                                val enchant = enchantList.random()
+                                enchantList.remove(enchant)
+                                val level = Random.nextInt(1, enchant.maxLevel + 1)
+                                item.addUnsafeEnchantment(enchant, level)
                             }
-                            e?.forEach {
-                                item.addEnchantment(it.key,it.value)
-                                player.sendMessage(it.key.name)
+                            if (item.enchantments.isEmpty() || (item.enchantments.size < 5 && Random.nextInt(
+                                    0,
+                                    50
+                                ) == 35)
+                            ) {
+                                val enchant = enchantList.random()
+                                enchantList.remove(enchant)
+                                val level = Random.nextInt(1, enchant.maxLevel + 1)
+                                item.addUnsafeEnchantment(enchant, level)
                             }
                             player.openInventory?.setItem(6, item)
-                        }
 
 
                             val enchantmentsList = ArrayList<Enchantment>()
@@ -190,22 +188,25 @@ class Event:Listener {
                                 player.openInventory.setItem(i, item)
                             }
                         }
-
-
                     }
-                else->{
+
+
+                }
+
+                else -> {
                     event.isCancelled = false
                 }
-                }
+            }
         }
     }
+
     @EventHandler
     fun onPlayerInteract(event: PlayerInteractEvent) {
         val player = event.player
         val clickedBlock: Block? = event.clickedBlock
-        when(clickedBlock?.type)  {
+        when (clickedBlock?.type) {
             Material.ENCHANTING_TABLE -> {
-                when(event.action) {
+                when (event.action) {
                     Action.RIGHT_CLICK_BLOCK -> {
                         event.isCancelled = true
                         val customUI = CustomUI.create(9, enchantUIName)
@@ -214,14 +215,16 @@ class Event:Listener {
                         customUI.setItem(2, ItemStack(Material.BOOK))
                         customUI.setItem(3, ItemStack(Material.BOOK))
                         customUI.setItem(4, ItemStack(Material.BOOK))
-                        customUI.setItem(8,ItemStack(Material.EXPERIENCE_BOTTLE))
+                        customUI.setItem(8, ItemStack(Material.EXPERIENCE_BOTTLE))
                         customUI.open(player)
                     }
-                    else ->{
+
+                    else -> {
 
                     }
                 }
             }
+
             else -> {
 
             }
