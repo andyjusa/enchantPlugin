@@ -1,0 +1,4 @@
+name: Ju
+version: '${project.version}'
+main: com.andyjusa.enchant.Main
+api-version: 1.19
